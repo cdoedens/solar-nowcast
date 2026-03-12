@@ -1,0 +1,2 @@
+# Solar Nowcasting
+This project aims to evaluate the performance of machine learning models to "nowcast" (forecast 0 - 6 hrs) gridded surface solar irradiance. Specifically, the project aims to understand how training models with different variables influences the predictive skill of the nowcasting in different weather environments
