@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # load analysis3 conda environment
-module use /g/data/xp65/public/modules
-module load conda/analysis3
+module purge
+module use /g/data/dk92/apps/Modules/modulefiles/
+module load pet/0.4.0
 
 # root directory for this repo
 export ROOT=/home/548/${USER}/repos/solar-nowcast
