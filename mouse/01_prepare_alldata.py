@@ -30,9 +30,9 @@ end_date   = datetime(start_year, start_month, start_day + int(n))
 
 # TO DO: change these to input args
 lat_min=-35
-lat_max=-32
-lon_min=148
-lon_max=152
+lat_max=-31
+lon_min=145
+lon_max=153
 
 
 # Get file paths for Heliosat datasets
@@ -77,10 +77,10 @@ rad_list = []
 
 ch_list = [
     'B03',
-    'B04',
-    # 'B06',
-    'B08',
-    # 'B11',
+    'B05',
+    'B07',
+    'B09',
+    'B11',
     'B13',
     'B15'
 ]
@@ -135,15 +135,24 @@ month = start_date.month
 
 # Variables from BARRA-C2
 variables_of_interest = [
+    # Moisture
     'huss',
     'hus850',
-    'hus700',
     'hus500',
+    # Wind
+    'ua850',
+    'va850',
+    'wa850',
+    # Pressure and geopotential
     'psl',
+    'zg850',
+    'zg500',
+    # Temperature
     'tas',
     'ta850',
-    'ta700',
     'ta500',
+    # Convective
+    'MUCAPE'
 ]
 for var in variables_of_interest:
     file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-04/BOM/ERA5/historical/hres/BARRA-C2/v1/1hr/{var}/latest/')
