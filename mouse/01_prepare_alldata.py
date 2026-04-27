@@ -5,6 +5,9 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+from metpy.calc import dewpoint_from_specific_humidity
+from metpy.units import units
+
 import xesmf as xe
 
 import os
@@ -13,30 +16,27 @@ import sys
 sys.path.append('/home/548/cd3022/repos/solar-nowcast/modules')
 import sat_preprocess
 
-import pyearthtools.data as petdata
-import pyearthtools.pipeline as petpipe
-from pyearthtools.data.time import Petdt
-from pyearthtools.pipeline.operations.xarray.join import GeospatialTimeSeriesMerge
-import site_archive_nci
 
 date = sys.argv[1]
 n = sys.argv[2]
 
 start_year, start_month, start_day = [int(i) for i in date.split('-')]
 
-
+# Data boundaries
 start_date = datetime(start_year, start_month, start_day)
 end_date   = datetime(start_year, start_month, start_day + int(n))
 
-# TO DO: change these to input args
 lat_min=-35
-lat_max=-31
+lat_max=-28.5
 lon_min=145
-lon_max=153
+lon_max=151.5
 
+
+####################################################################
+########################## HELIOSAT DATA ###########################
+####################################################################
 
 # Get file paths for Heliosat datasets
-
 base_path = Path('/g/data/rv74/satellite-products/arc/der/himawari-ahi/solar/p1s/latest')
 
 files = []
@@ -58,7 +58,7 @@ while current <= end_date:
 # Select variables to be used from the heliosat dataset
 helio_vars = [
     'cloud_optical_depth',
-    'solar_elevation',
+    # 'solar_elevation',
 ]
 
 # keep just the region and variables during preprocessing
@@ -72,6 +72,10 @@ def preprocess(ds):
 # Open the data
 ghi = xr.open_mfdataset(files, preprocess=preprocess)
 
+
+####################################################################
+########################## RADIANCE DATA ###########################
+####################################################################
 
 rad_list = []
 
@@ -128,34 +132,55 @@ regridder = xe.Regridder(
 ds_rad_interp = regridder(ds_rad)
 
 
+####################################################################
+########################## BARRA-R2 DATA ###########################
+####################################################################
 files = []
-
 year  = start_date.year
 month = start_date.month
 
-# Variables from BARRA-C2
+# STANDARD VARS
 variables_of_interest = [
     # Moisture
     'huss',
     'hus850',
+    'hus700',
     'hus500',
     # Wind
-    'ua850',
-    'va850',
-    'wa850',
+    # 'ua850',
+    # 'va850',
+    # 'wa850',
     # Pressure and geopotential
-    'psl',
-    'zg850',
-    'zg500',
+    # 'psl',
+    # 'zg850',
+    # 'zg500',
     # Temperature
-    'tas',
+    # 'tas',
     'ta850',
+    'ta700',
     'ta500',
-    # Convective
-    'MUCAPE'
 ]
+
+# Add files to list for open_mfdataset
 for var in variables_of_interest:
-    file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-04/BOM/ERA5/historical/hres/BARRA-C2/v1/1hr/{var}/latest/')
+    file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUS-11/BOM/ERA5/historical/hres/BARRA-R2/v1/1hr/{var}/latest/')
+    var_file = [f for f in file_path.glob(f'*{year}{month:02d}.nc')][0]
+    files.append(var_file)
+
+# CONVECTIVE VARS
+'''
+Need to check if MU is appropriate for EL, LCL
+'''
+variables_of_interest = [
+    'RH24mean',
+    'MUEL',
+    'FZL',
+    'MULCL'
+]
+
+# Add files to list for open_mfdataset
+for var in variables_of_interest:
+    file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-11/BOM/ERA5/historical/hres/BARRA-R2/v1/1hr/{var}/latest/')
     var_file = [f for f in file_path.glob(f'*{year}{month:02d}.nc')][0]
     files.append(var_file)
 
@@ -166,13 +191,44 @@ def preprocess(ds):
         lon=slice(lon_min, lon_max),
         time=slice(np.datetime64(start_date), np.datetime64(end_date))
     )
-
-# Open BARRA-C2 data
+# Open BARRA Data
 bar = xr.open_mfdataset(
     files,
     compat='override',
     preprocess=preprocess
 )
+
+########################## Thunderstorm ###########################
+############################# Indices #############################
+
+# Calculate dew points for thunderstorm parameters
+for pressure in ['850', '700', '500']:
+    bar[f'dp{pressure}'] = (
+        dewpoint_from_specific_humidity(
+            pressure=int(pressure) * units.hPa,
+            specific_humidity=bar[f'hus{pressure}'] * units('g/g'),
+        )
+        .metpy.convert_units('K')   # or 'K' depending on your preference
+        .metpy.dequantify()            # removes units → returns plain DataArray
+    )
+
+# Convective Parameters from RAW TS Climatology Paper
+bar['KI'] = bar['ta850'] - bar['ta500'] + bar['dp850'] - (bar['ta700'] - bar['dp700'])
+bar['TCD'] = bar['MUEL'] - bar['MULCL']
+bar['CCD'] = np.maximum(
+    np.minimum(
+        bar['MUEL'] - bar['FZL'],
+        bar['TCD']
+    ),
+    np.zeros(bar['FZL'].shape)
+)
+bar['ATP'] = ((bar['CCD'] - 1000) / 1000) * ((bar['RH24mean'] - 50) / 10)
+
+
+
+####################################################################
+########################### ALIGN GRIDS ############################
+####################################################################
 
 # Interp BARRA-C2 to Heliosat grid, using method="nearest"
 # to keep values the same
