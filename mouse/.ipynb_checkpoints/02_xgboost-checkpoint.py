@@ -48,8 +48,8 @@ for n in range(1, 7):
 
 X_train = X_train.drop(columns=['month'])
 X_test = X_test.drop(columns=['month'])
-y_train = train_df['cloud_optical_depth_t1']
-y_test = test_df['cloud_optical_depth_t1']
+y_train = train_df[['cloud_optical_depth_t1']]
+y_test = test_df[['cloud_optical_depth_t1']]
 
 
 # APPLY LOG TRANSFORM TO CLOUD OPTICAL DEPTH
