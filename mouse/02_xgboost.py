@@ -10,10 +10,12 @@ import matplotlib.pyplot as plt
 
 import os
 import sys
+import yaml
+
 sys.path.append('/home/548/cd3022/repos/solar-nowcast/modules')
 import data_transform
+from xgb_preprocessing import prepare_data
 
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 
 model_name = sys.argv[1]
@@ -25,43 +27,29 @@ df = pd.concat(
     for f in data_path.glob('*all_training*')
 )
 
-# ADD MONTH COLUMN TO USE FOR TRAIN/TEST SPLIT
-df['month'] = df.index.get_level_values('time').month
+# Get configurations from yaml file
+with open("/home/548/cd3022/repos/solar-nowcast/configs/mouse/basic.yaml") as f:
+    config = yaml.safe_load(f)
 
-# Based off NWCSAF cloud retrieval algorithm requirements
-df['channel_0013_0015_difference'] = df['channel_0013_brightness_temperature'] - df['channel_0015_brightness_temperature']
-df['channel_0011_0013_difference'] = df['channel_0011_brightness_temperature'] - df['channel_0013_brightness_temperature']
-df['channel_0007_0013_difference'] = df['channel_0007_brightness_temperature'] - df['channel_0013_brightness_temperature']
+model_name = config["model"]["name"]
+forecast_lead = config["model"]["forecast_lead"]
+test_months = config["model"]["test_months"]
+X_vars = config["data"]["predictors"]
+target = config["data"]["target"]
+y_var = f'{target}_t{forecast_lead}'
 
-
-# SPLIT INTO TRAIN AND TEST BASED OFF MONTH
-test_months = [2, 6, 10]
-train_df = df[~df['month'].isin(test_months)]
-test_df  = df[df['month'].isin(test_months)]
-
-# DEFINE PREDICTOR AND TARGET VARIABLES
-X_train = train_df.copy()
-X_test = test_df.copy()
-for n in range(1, 7):
-    X_train = X_train.drop(columns=[f'cloud_optical_depth_t{n}'])
-    X_test = X_test.drop(columns=[f'cloud_optical_depth_t{n}'])
-
-X_train = X_train.drop(columns=['month'])
-X_test = X_test.drop(columns=['month'])
-y_train = train_df[['cloud_optical_depth_t1']]
-y_test = test_df[['cloud_optical_depth_t1']]
+# Split into x, y, train, test data
+X_train, X_test, y_train, y_test = prepare_data(
+    df=df,
+    X=X_vars,
+    y=y_var,
+    test_months=test_months
+)
 
 
 # APPLY LOG TRANSFORM TO CLOUD OPTICAL DEPTH
 y_train_log = data_transform.log_transform(y_train)
 y_test_log  = data_transform.log_transform(y_test)
-
-# SAVE DATASETS TO BE USED LATER
-X_train.to_parquet(data_path / f'train_predictors_{model_name}.parquet')
-y_train_log.to_parquet(data_path / f'train_target_{model_name}.parquet')
-
-X_test.to_parquet(data_path / f'test_predictors_{model_name}.parquet')
-y_test_log.to_parquet(data_path / f'test_target_{model_name}.parquet')
 
 # DEFINE MODEL
 model = xgb.XGBRegressor(
