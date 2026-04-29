@@ -18,13 +18,13 @@ import sat_preprocess
 
 
 date = sys.argv[1]
-n = sys.argv[2]
+num_days = sys.argv[2]
 
 start_year, start_month, start_day = [int(i) for i in date.split('-')]
 
 # Data boundaries
 start_date = datetime(start_year, start_month, start_day)
-end_date   = datetime(start_year, start_month, start_day + int(n))
+end_date   = datetime(start_year, start_month, start_day + int(num_days))
 
 lat_min=-35
 lat_max=-28.5
@@ -82,10 +82,10 @@ rad_list = []
 
 ch_list = [
     'B03',
-    'B04',
+    # 'B04',
     'B05',
     'B07',
-    'B08',
+    # 'B08',
     'B09',
     'B11',
     'B13',
@@ -166,26 +166,23 @@ variables_of_interest = [
 
 # Add files to list for open_mfdataset
 for var in variables_of_interest:
-    file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-04/BOM/ERA5/historical/hres/BARRA-C2/v1/1hr/{var}/latest/')
+    file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUS-11/BOM/ERA5/historical/hres/BARRA-R2/v1/1hr/{var}/latest/')
     var_file = [f for f in file_path.glob(f'*{year}{month:02d}.nc')][0]
     files.append(var_file)
 
-# # CONVECTIVE VARS
-# '''
-# Need to check if MU is appropriate for EL, LCL
-# '''
-# variables_of_interest = [
-#     'RH24mean',
-#     'MUEL',
-#     'FZL',
-#     'MULCL'
-# ]
+# CONVECTIVE VARS
+variables_of_interest = [
+    'RH24mean',
+    'MUEL',
+    'FZL',
+    'MULCL'
+]
 
-# # Add files to list for open_mfdataset
-# for var in variables_of_interest:
-#     file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-11/BOM/ERA5/historical/hres/BARRA-R2/v1/1hr/{var}/latest/')
-#     var_file = [f for f in file_path.glob(f'*{year}{month:02d}.nc')][0]
-#     files.append(var_file)
+# Add files to list for open_mfdataset
+for var in variables_of_interest:
+    file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-11/BOM/ERA5/historical/hres/BARRA-R2/v1/1hr/{var}/latest/')
+    var_file = [f for f in file_path.glob(f'*{year}{month:02d}.nc')][0]
+    files.append(var_file)
 
 # Keep just time and region 
 def preprocess(ds):
@@ -201,31 +198,37 @@ bar = xr.open_mfdataset(
     preprocess=preprocess
 )
 
+# When there is 0 CAPE, MUEL is nan.
+# To fix this and make sure the model is trained off all environments,
+# set MUEL to 0 where there are nan values.
+# Other variables (e.g. CIN) are not so easily set to 0
+bar['MUEL'] = xr.where(bar['MUEL'].isnull(), 0, bar['MUEL'])
+
 ########################## Thunderstorm ###########################
 ############################# Indices #############################
 
-# # Calculate dew points for thunderstorm parameters
-# for pressure in ['850', '700', '500']:
-#     bar[f'dp{pressure}'] = (
-#         dewpoint_from_specific_humidity(
-#             pressure=int(pressure) * units.hPa,
-#             specific_humidity=bar[f'hus{pressure}'] * units('g/g'),
-#         )
-#         .metpy.convert_units('K')   # or 'K' depending on your preference
-#         .metpy.dequantify()            # removes units → returns plain DataArray
-#     )
+# Calculate dew points for thunderstorm parameters
+for pressure in ['850', '700', '500']:
+    bar[f'dp{pressure}'] = (
+        dewpoint_from_specific_humidity(
+            pressure=int(pressure) * units.hPa,
+            specific_humidity=bar[f'hus{pressure}'] * units('g/g'),
+        )
+        .metpy.convert_units('K')   # or 'K' depending on your preference
+        .metpy.dequantify()            # removes units → returns plain DataArray
+    )
 
-# # Convective Parameters from RAW TS Climatology Paper
-# bar['KI'] = bar['ta850'] - bar['ta500'] + bar['dp850'] - (bar['ta700'] - bar['dp700'])
-# bar['TCD'] = bar['MUEL'] - bar['MULCL']
-# bar['CCD'] = np.maximum(
-#     np.minimum(
-#         bar['MUEL'] - bar['FZL'],
-#         bar['TCD']
-#     ),
-#     np.zeros(bar['FZL'].shape)
-# )
-# bar['ATP'] = ((bar['CCD'] - 1000) / 1000) * ((bar['RH24mean'] - 50) / 10)
+# Convective Parameters from RAW TS Climatology Paper
+bar['KI'] = bar['ta850'] - bar['ta500'] + bar['dp850'] - (bar['ta700'] - bar['dp700'])
+bar['TCD'] = bar['MUEL'] - bar['MULCL']
+bar['CCD'] = np.maximum(
+    np.minimum(
+        bar['MUEL'] - bar['FZL'],
+        bar['TCD']
+    ),
+    np.zeros(bar['FZL'].shape)
+)
+bar['ATP'] = ((bar['CCD'] - 1000) / 1000) * ((bar['RH24mean'] - 50) / 10)
 
 
 
@@ -233,7 +236,7 @@ bar = xr.open_mfdataset(
 ########################### ALIGN GRIDS ############################
 ####################################################################
 
-# Interp BARRA-C2 to Heliosat grid, using method="nearest"
+# Interp BARRA to Heliosat grid, using method="nearest"
 # to keep values the same
 bar_interp = bar.interp(
     lat=ghi.latitude,
@@ -249,6 +252,10 @@ ghi_aligned, rad_aligned, bar_aligned = xr.align(
     bar_interp,
     join="inner"
 )
+
+####################################################################
+######################### PREPARE FOR XGB ##########################
+####################################################################
 
 # merge datasets
 ds = xr.merge([ghi_aligned, rad_aligned, bar_aligned])
@@ -274,6 +281,7 @@ for n in range(1, 7):
 df = ds.to_dataframe()
 data = df.dropna()
 
+# Extra satellite predictors (defining here to clean up other scripts).
 # Based off NWCSAF cloud retrieval algorithm requirements
 data['channel_0013_0015_difference'] = data['channel_0013_brightness_temperature'] - data['channel_0015_brightness_temperature']
 data['channel_0011_0013_difference'] = data['channel_0011_brightness_temperature'] - data['channel_0013_brightness_temperature']
@@ -282,4 +290,4 @@ data['channel_0007_0013_difference'] = data['channel_0007_brightness_temperature
 start_str = f"{start_date}"[0:10]
 end_str = f"{end_date}"[0:10]
 
-data.to_parquet(f'/scratch/er8/cd3022/xgb_datasets/all_training_BAR-C_{start_str}_{end_str}.parquet')
+data.to_parquet(f'/scratch/er8/cd3022/xgb_datasets/all_training_{start_str}.parquet')
