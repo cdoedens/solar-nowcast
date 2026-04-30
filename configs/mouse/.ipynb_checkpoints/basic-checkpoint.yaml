@@ -1,8 +1,0 @@
-model:
-    name: vanilla
-    forecast_lead: 1
-    test_months: [2, 6, 10]
-data:
-    predictors: [channel_0013_brightness_temperature, channel_0003_scaled_radiance, channel_0015_brightness_temperature, hus850, hus500, ta850, hus700, ta700, ta500, channel_0013_0015_difference, channel_0011_0013_difference, channel_0007_0013_difference, KI, ATP, RH24mean, CCD, MULCL, MUEL, FZL]
-    target: cloud_optical_depth
-    
