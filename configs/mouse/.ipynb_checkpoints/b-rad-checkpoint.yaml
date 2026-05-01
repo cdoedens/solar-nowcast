@@ -1,0 +1,11 @@
+model:
+  name: b-rad
+  forecast_lead: 2
+data:
+  predictors:
+    - channel_0003_scaled_radiance
+    - channel_0015_brightness_temperature
+    - channel_0007_0013_difference
+    - channel_0011_0013_difference
+    - cloud_optical_depth
+  target: cloud_optical_depth

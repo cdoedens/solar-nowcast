@@ -1,6 +1,6 @@
 model:
     name: vanilla
-    forecast_lead: 1
+    forecast_lead: 2
 data:
     predictors:
     - channel_0013_brightness_temperature
@@ -18,5 +18,6 @@ data:
     - KI
     - RH24mean
     - TCD
+    - cloud_optical_depth
     target: cloud_optical_depth
     
