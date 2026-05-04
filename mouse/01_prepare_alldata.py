@@ -15,6 +15,7 @@ import sys
 
 sys.path.append('/home/548/cd3022/repos/solar-nowcast/modules')
 import sat_preprocess
+import clear_sky
 
 
 date = sys.argv[1]
@@ -33,7 +34,7 @@ lon_max=151.5
 
 
 ####################################################################
-########################## HELIOSAT DATA ###########################
+# HELIOSAT DATA
 ####################################################################
 
 # Get file paths for Heliosat datasets
@@ -75,7 +76,7 @@ ghi = xr.open_mfdataset(files, preprocess=preprocess)
 
 
 ####################################################################
-########################## RADIANCE DATA ###########################
+# RADIANCE DATA
 ####################################################################
 
 rad_list = []
@@ -136,7 +137,7 @@ ds_rad_interp = regridder(ds_rad)
 
 
 ####################################################################
-########################## BARRA-R2 DATA ###########################
+# BARRA-R2 DATA
 ####################################################################
 files = []
 year  = start_date.year
@@ -233,7 +234,7 @@ bar['ATP'] = ((bar['CCD'] - 1000) / 1000) * ((bar['RH24mean'] - 50) / 10)
 
 
 ####################################################################
-########################### ALIGN GRIDS ############################
+# ALIGN GRIDS
 ####################################################################
 
 # Interp BARRA to Heliosat grid, using method="nearest"
@@ -254,7 +255,7 @@ ghi_aligned, rad_aligned, bar_aligned = xr.align(
 )
 
 ####################################################################
-######################### PREPARE FOR XGB ##########################
+# PREPARE DATAFRAME
 ####################################################################
 
 # merge datasets
@@ -273,12 +274,25 @@ ds = ds.drop_vars(
     ], errors="ignore"
 )
 
-for n in range(1, 7):
-    ds[f'cloud_optical_depth_t{n}'] = (
-        ds['cloud_optical_depth'].shift(time=-n)
-    )
-
 df = ds.to_dataframe()
+
+####################################################################
+# CALCULATE CSI
+####################################################################
+
+# only use data for when solar elevation is above 10 degrees
+df = df[df['solar_elevation'] > 10]
+
+# Calculate CSI using pvlib
+df['csi'] = clear_sky.csi(
+    ghi=df['surface_global_irradiance'],
+    time=df.index.get_level_values('time'),
+    lat=df.index.get_level_values('latitude'),
+    lon=df.index.get_level_values('longitude')
+    
+)
+
+
 data = df.dropna()
 
 # Extra satellite predictors (defining here to clean up other scripts).
@@ -291,3 +305,4 @@ start_str = f"{start_date}"[0:10]
 end_str = f"{end_date}"[0:10]
 
 data.to_parquet(f'/scratch/er8/cd3022/xgb_datasets/all_training_{start_str}.parquet')
+print("DONE!")
