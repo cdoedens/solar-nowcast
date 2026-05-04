@@ -41,7 +41,7 @@ def set_X_y(X, y, df):
     return X_df, y_df
 
 
-def prepare_data(df, X, y, test_months):
+def prepare_data(df, X, y, test_months=None):
     '''
     Prepare all the datasets needed to train and test a machine learning model.
 
@@ -54,12 +54,16 @@ def prepare_data(df, X, y, test_months):
     Outputs:
     X_train, X_test, y_train, y_test
     '''
-    train_df, test_df = train_test_split_by_month(df, test_months)
 
-    X_train, y_train = set_X_y(X, y, train_df)
-    X_test, y_test = set_X_y(X, y, test_df)
-
-    return X_train, X_test, y_train, y_test
-
+    if test_months:
+        train_df, test_df = train_test_split_by_month(df, test_months)
+    
+        X_train, y_train = set_X_y(X, y, train_df)
+        X_test, y_test = set_X_y(X, y, test_df)
+    
+        return X_train, X_test, y_train, y_test
+    else:
+        X, y = set_X_y(X, y, df)
+        return X, y
     
     

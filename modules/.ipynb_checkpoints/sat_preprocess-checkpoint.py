@@ -63,7 +63,7 @@ def get_files(channel, start_time, end_time, step_minutes=10):
 
 
 
-def get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max):
+def get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max, coords=False):
     """
     Use the ancillary file to select just a lat/lon region bounds.
 
@@ -76,21 +76,26 @@ def get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max):
         ds cropped to the coordinate bounds
     """
     reg = ancil.where(
-        (ancil.lat > lat_min) & (ancil.lat < lat_max) & 
-        (ancil.lon > lon_min) & (ancil.lon < lon_max),
+        (ancil.lat >= lat_min) & (ancil.lat <= lat_max) & 
+        (ancil.lon >= lon_min) & (ancil.lon <= lon_max),
         drop=True
     )
-    return ds.sel(y=reg.y.values, x=reg.x.values)
 
+    ds_reg = ds.sel(y=reg.y.values, x=reg.x.values)
 
-
-
+    if not coords:
+        return ds_reg
+    
+    return ds_reg.assign_coords({
+        "latitude": (("y", "x"), reg.lat.values),
+        "longitude": (("y", "x"), reg.lon.values),
+    })
 
 
 
     
 
-def read_himawari_channel(channel, start, end, lat_min, lat_max, lon_min, lon_max):
+def read_himawari_channel(channel, start, end, lat_min, lat_max, lon_min, lon_max, coords=False):
     '''
     Retrieve Himawari-8/9 radiance data from an individual channel for a certain time period and region.
 
@@ -106,7 +111,7 @@ def read_himawari_channel(channel, start, end, lat_min, lat_max, lon_min, lon_ma
     ancil = get_ancil(files[0])
 
     def preprocess(ds):
-        return get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max)
+        return get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max, coords)
 
     return xr.open_mfdataset(files, preprocess=preprocess)
     
