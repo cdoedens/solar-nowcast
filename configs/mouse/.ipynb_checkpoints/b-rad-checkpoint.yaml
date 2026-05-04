@@ -1,8 +1,14 @@
 model:
-  name: b-rad
-  forecast_lead: 2
+    name: b-rad
+    forecast_lead: 2
+    parameters:
+        random_state: 42
+        n_estimators: 2000
+        early_stopping_rounds: 50
+        learning_rate: 0.03
+        eval_metric: rmse
 data:
-  predictors:
+    predictors:
     - channel_0003_scaled_radiance
     - channel_0015_brightness_temperature
     - channel_0007_0013_difference

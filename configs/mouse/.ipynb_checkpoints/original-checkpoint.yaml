@@ -1,6 +1,12 @@
 model:
     name: original
     forecast_lead: 1
+    parameters:
+        random_state: 42
+        n_estimators: 2000
+        early_stopping_rounds: 50
+        learning_rate: 0.03
+        eval_metric: rmse
 data:
     predictors:
     - channel_0013_brightness_temperature
