@@ -82,6 +82,7 @@ model = xgb.XGBRegressor(
 
 # TRAINING
 model.fit(
+    X_train, y_train,
     eval_set=[(X_train, y_train), (X_test, y_test)],
     verbose=False
 )
