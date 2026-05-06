@@ -9,7 +9,12 @@ num_batches = 12
 days_per_batch = 1
 dates = []
 
-for day in range(1, 11):
+# Not starting at 1st of month
+# BARRA loads monthly data as per UTC (i.e. starting at 01-01T00:00)
+# Himawari daily data organised by AUD days (i.e. starts at 12-31T17:00)
+# So starting at one can be annoying
+# Taking days from the middle of the month avoids this
+for day in range(2, 12):
     first = f'2025-01-{day:02d}'
     first_dt = datetime.strptime(first, "%Y-%m-%d")
     for x in range(num_batches):
