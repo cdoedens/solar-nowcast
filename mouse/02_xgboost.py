@@ -24,9 +24,8 @@ from sklearn.metrics import mean_squared_error
 # LOAD MODEL CONFIGURATION
 ###############################################################
 config_name = sys.argv[1]
-
 # Get configurations from yaml file
-with open("/home/548/cd3022/repos/solar-nowcast/configs/mouse/basic.yaml") as f:
+with open(f"/home/548/cd3022/repos/solar-nowcast/configs/mouse/{config_name}.yaml") as f:
     config = yaml.safe_load(f)
 # Model
 model_name = config["model"]["name"]
@@ -42,6 +41,7 @@ eval_metric = config["model"]["parameters"]["eval_metric"]
 X_vars = config["data"]["predictors"]
 target = config["data"]["target"]
 y_var = f'{target}_t{forecast_lead}'
+all_vars = X_vars + [y_var]
 
 
 ###############################################################
@@ -49,21 +49,27 @@ y_var = f'{target}_t{forecast_lead}'
 ###############################################################
 
 data_path = Path('/scratch/er8/cd3022/xgb_datasets/')
-df_train = dd.read_parquet(data_path / "train_months.parquet", columns=X_vars + [y_var])
-df_test = dd.read_parquet(data_path / "test_months.parquet", columns=X_vars + [y_var])
 
-# Split into x, y, train, test data
-X_train, y_train = prepare_data(
-    df=df_train,
-    X=X_vars,
-    y=y_var,
-)
+train_files = []
+test_files = []
 
-X_test, y_test = prepare_data(
-    df=df_test,
-    X=X_vars,
-    y=y_var,
-)
+# separate data into training and test months
+for f in data_path.glob("all_training_month*"):
+    month = f.name.split("_")[-1][:2]  # adjust to your naming
+
+    if month in ['02', '06', '10']:
+        test_files.append(str(f))
+    else:
+        train_files.append(str(f))
+        
+# open training and test data separately
+df_train = dd.read_parquet(train_files, columns=all_vars)
+df_test  = dd.read_parquet(test_files, columns=all_vars)
+
+X_train = df_train[X_vars]
+y_train = df_train[y_var]
+X_test = df_test[X_vars]
+y_test = df_test[y_var]
 
 # DEFINE MODEL
 model = xgb.XGBRegressor(
