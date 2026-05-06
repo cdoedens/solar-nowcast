@@ -24,6 +24,6 @@ data:
     - KI
     - RH24mean
     - TCD
-    - cloud_optical_depth
-    target: cloud_optical_depth
+    - csi
+    target: csi
     
