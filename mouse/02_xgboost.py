@@ -12,9 +12,13 @@ import yaml
 if __name__ == '__main__':
     # Start dask client for distributed training
     client = Client(
-        n_workers=8
+        n_workers=8,
+        threads_per_worker=1
     )
-    
+
+    # match partitions with workers
+    num_partitions = 64
+
     ###############################################################
     # LOAD MODEL CONFIGURATION
     ###############################################################
@@ -58,25 +62,32 @@ if __name__ == '__main__':
     df_train = (
         dd.read_parquet(train_files, columns=all_vars)
         .astype("float32")
+        .repartition(npartitions=num_partitions)
+        .persist()
     )
-    
+
     df_test = (
         dd.read_parquet(test_files, columns=all_vars)
         .astype("float32")
+        .repartition(npartitions=num_partitions)
+        .persist()
     )
-    
-    # Split into testing and training
+
+    # Split AFTER repartitioning
     X_train = df_train[X_vars]
     y_train = df_train[y_var]
-    
+
     X_test = df_test[X_vars]
     y_test = df_test[y_var]
-    
-    # smaller train set for evaluation
-    train_monitor = df_train.sample(frac=0.001)
+
+    # monitor set
+    train_monitor = (
+        df_train.sample(frac=0.001)
+        .persist()
+    )
+
     X_train_monitor = train_monitor[X_vars]
     y_train_monitor = train_monitor[y_var]
-    
     ###############################################################
     # XGBoost
     ###############################################################
