@@ -125,16 +125,66 @@ print(f"Optical Flow RMSE: {rmse_gso.item()}")
 
 # RMSE by month
 
-for month in np.unique(ds_xgb.time.dt.month):
-    obs = ds_xgb.cloud_optical_depth
-    fcst_xgb = ds_xgb.forecast
-    fcst_gso = ds_gso.sel(forecast_time='01:00:00').cloud_optical_depth
+# RMSE by month
+
+for month, month_ds in ds_xgb.groupby('time.month'):
+    
+    obs = month_ds[f'csi_t{forecast_lead}']
+    fcst_xgb = month_ds[f'forecast_t{forecast_lead}']
+    fcst_gso = ds_xgb['csi_gso'].sel(time=month_ds.time)
     
     rmse_xgb = rmse(obs, fcst_xgb)
+    print(f"Month: {month:02d}")
     print(f"XGBoost RMSE: {rmse_xgb.item()}")
     
     rmse_gso = rmse(obs, fcst_gso)
-    rmse_gso = rmse_gso.compute()
+    print(f"Optical Flow RMSE: {rmse_gso.item()}")
+
+
+# By CSI magnitude
+
+csi_ranges = [
+    (0.25, 0.5),
+    (0.5, 0.75),
+    (0.75, 10),
+]
+
+for csi_min, csi_max in csi_ranges:
+    ds_range = ds_xgb.where((ds_xgb[f'csi_t{forecast_lead}'] > csi_min) & (ds_xgb[f'csi_t{forecast_lead}'] < csi_max))
+    obs = ds_range[f'csi_t{forecast_lead}']
+    fcst_xgb = ds_range[f'forecast_t{forecast_lead}']
+    fcst_gso = ds_range['csi_gso']
+
+    rmse_xgb = rmse(obs, fcst_xgb)
+    print(f"CSI Range: {csi_min} - {csi_max}")
+    print(f"XGBoost RMSE: {rmse_xgb.item()}")
+    
+    rmse_gso = rmse(obs, fcst_gso)
+    print(f"Optical Flow RMSE: {rmse_gso.item()}")
+
+
+# By change in CSI
+
+ds_xgb['csi_delta'] = ds_xgb[f'csi_t{forecast_lead}'] - ds_xgb['csi']
+
+delta_range = [
+    (-10, -0.1),
+    (-0.1, 0.1),
+    (0.1, 10)
+]
+
+for delta_min, delta_max in delta_range:
+    ds_range = ds_xgb.where((ds_xgb['csi_delta'] > delta_min) & (ds_xgb['csi_delta'] < delta_max))
+
+    obs = ds_range[f'csi_t{forecast_lead}']
+    fcst_xgb = ds_range[f'forecast_t{forecast_lead}']
+    fcst_gso = ds_range['csi_gso']
+
+    rmse_xgb = rmse(obs, fcst_xgb)
+    print(f"CSI Delta Range: {csi_min} - {csi_max}")
+    print(f"XGBoost RMSE: {rmse_xgb.item()}")
+    
+    rmse_gso = rmse(obs, fcst_gso)
     print(f"Optical Flow RMSE: {rmse_gso.item()}")
 
 ############################################################
