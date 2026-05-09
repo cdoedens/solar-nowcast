@@ -44,6 +44,10 @@ def get_files(channel, start_time, end_time, step_minutes=10):
     Returns:
         list of Path objects
     """
+    # correct for UTC time diff
+    start_time -= timedelta(hours=10)
+    end_time -= timedelta(hours=10)
+    
     base_dir = '/g/data/ra22/satellite-products/arc/obs/himawari-ahi/fldk/latest'
     base_dir = Path(base_dir)
     current = start_time
@@ -113,7 +117,15 @@ def read_himawari_channel(channel, start, end, lat_min, lat_max, lon_min, lon_ma
     def preprocess(ds):
         return get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max, coords)
 
-    return xr.open_mfdataset(files, preprocess=preprocess)
+    return xr.open_mfdataset(
+        files,
+        preprocess=preprocess,
+        concat_dim='time',
+        combine='nested',
+        data_vars='minimal',
+        coords='minimal',
+        compat='override'
+    )
     
 
 
