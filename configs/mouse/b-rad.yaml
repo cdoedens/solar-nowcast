@@ -14,4 +14,9 @@ data:
         - channel_0007_0013_difference
         - channel_0011_0013_difference
         - csi
+        - delta_channel_0003_scaled_radiance
+        - delta_channel_0015_brightness_temperature
+        - delta_channel_0007_0013_difference
+        - delta_channel_0011_0013_difference
+        - delta_csi
     target: csi

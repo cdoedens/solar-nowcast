@@ -1,6 +1,6 @@
 model:
     name: original
-    forecast_lead: 1
+    forecast_lead: 2
     parameters:
         random_state: 42
         n_estimators: 2000
@@ -9,20 +9,21 @@ model:
         eval_metric: rmse
 data:
     predictors:
-    - channel_0013_brightness_temperature
-    - channel_0003_scaled_radiance
-    - channel_0015_brightness_temperature
-    - hus850
-    - huss
-    - hus500
-    - tas
-    - ta850
-    - hus700
-    - psl
-    - channel_0009_brightness_temperature
-    - ta700
-    - solar_elevation
-    - ta500
-    - channel_0005_scaled_radiance
-    target: cloud_optical_depth
+        - channel_0013_brightness_temperature
+        - channel_0003_scaled_radiance
+        - channel_0015_brightness_temperature
+        - hus850
+        - huss
+        - hus500
+        - tas
+        - ta850
+        - hus700
+        - psl
+        - channel_0009_brightness_temperature
+        - ta700
+        - solar_elevation
+        - ta500
+        - channel_0005_scaled_radiance
+        - csi
+    target: csi
     

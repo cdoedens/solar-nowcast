@@ -1,5 +1,5 @@
 model:
-    name: vanilla
+    name: b-mod
     forecast_lead: 2
     parameters:
         random_state: 42
@@ -9,20 +9,30 @@ model:
         eval_metric: rmse
 data:
     predictors:
-        - channel_0013_brightness_temperature
-        - channel_0003_scaled_radiance
-        - channel_0015_brightness_temperature
+        - huss
         - hus850
-        - hus500
-        - ta850
         - hus700
+        - hus500
+        - tas
+        - ta850
         - ta700
         - ta500
-        - channel_0013_0015_difference
-        - channel_0011_0013_difference
-        - channel_0007_0013_difference
         - KI
         - RH24mean
         - TCD
+        - psl
         - csi
+        - delta_huss
+        - delta_hus850
+        - delta_hus700
+        - delta_hus500
+        - delta_tas
+        - delta_ta850
+        - delta_ta700
+        - delta_ta500
+        - delta_KI
+        - delta_RH24mean
+        - delta_TCD
+        - delta_psl
+        - delta_csi
     target: csi
