@@ -184,7 +184,10 @@ for var in variables_of_interest:
     file_path = Path(f'/g/data/ob53/BARRA2/output/reanalysis/AUST-11/BOM/ERA5/historical/hres/BARRA-R2/v1/1hr/{var}/latest/')
     var_file = [f for f in file_path.glob(f'*{year}{month:02d}.nc')][0]
     files.append(var_file)
-
+    
+# adjust time for UTC
+au_start_date = start_date - timedelta(hours=10)
+au_end_date = end_date - timedelta(hours=10)
 # Keep just time and region 
 def preprocess(ds):
     return ds.sel(
@@ -234,7 +237,7 @@ bar['ATP'] = ((bar['CCD'] - 1000) / 1000) * ((bar['RH24mean'] - 50) / 10)
 
 
 ####################################################################
-# ALIGN GRIDS
+# ALIGN AND JOIN DATASETS
 ####################################################################
 
 # Interp BARRA to Heliosat grid, using method="nearest"
@@ -245,18 +248,20 @@ bar_interp = bar.interp(
     method='nearest'
 )
 
+# interp to Himawari times for more daily data
+bar_interp2 = bar_interp.interp(
+    time=ghi.time,
+    method='linear'
+)
+
 
 # align all datasets so they can be merged
 ghi_aligned, rad_aligned, bar_aligned = xr.align(
     ghi,
     ds_rad_interp,
-    bar_interp,
+    bar_interp2,
     join="inner"
 )
-
-####################################################################
-# PREPARE DATAFRAME
-####################################################################
 
 # merge datasets
 ds = xr.merge([ghi_aligned, rad_aligned, bar_aligned])
@@ -274,12 +279,15 @@ ds = ds.drop_vars(
     ], errors="ignore"
 )
 
-df = ds.to_dataframe()
+
 
 ####################################################################
 # CALCULATE CSI
 ####################################################################
 
+
+# Convert to tabular format for PVLib functions
+df = ds.to_dataframe()
 # only use data for when solar elevation is above 10 degrees
 df = df[df['solar_elevation'] > 10]
 
@@ -292,17 +300,47 @@ df['csi'] = clear_sky.csi(
     
 )
 
+####################################################################
+# SATELLITE CHANNEL DIFFS
+####################################################################
 
-data = df.dropna()
-
-# Extra satellite predictors (defining here to clean up other scripts).
 # Based off NWCSAF cloud retrieval algorithm requirements
-data['channel_0013_0015_difference'] = data['channel_0013_brightness_temperature'] - data['channel_0015_brightness_temperature']
-data['channel_0011_0013_difference'] = data['channel_0011_brightness_temperature'] - data['channel_0013_brightness_temperature']
-data['channel_0007_0013_difference'] = data['channel_0007_brightness_temperature'] - data['channel_0013_brightness_temperature']
 
-start_str = f"{start_date}"[0:10]
-end_str = f"{end_date}"[0:10]
+df['channel_0013_0015_difference'] = df['channel_0013_brightness_temperature'] - df['channel_0015_brightness_temperature']
+df['channel_0011_0013_difference'] = df['channel_0011_brightness_temperature'] - df['channel_0013_brightness_temperature']
+df['channel_0007_0013_difference'] = df['channel_0007_brightness_temperature'] - df['channel_0013_brightness_temperature']
 
-data.to_parquet(f'/scratch/er8/cd3022/xgb_datasets/all_training_{start_str}.parquet')
+####################################################################
+# ADD PAST/FUTURE DATA FOR X AND Y VARS
+####################################################################
+
+# convert back to xarray to shift time steps
+ds = df.to_xarray()
+
+# Make sure DS has regular 1 hour time steps, so ds.shift(time=n) will always shift by an hour.
+ds = ds.resample(time='10min').asfreq()
+# Add future times as variables so it will become a column in the DF,
+# ready for input to xgb
+for hours in [1,2,3]:
+    shift = hours * 6
+    ds[f'csi_t{hours}'] = (
+        ds['csi'].shift(time=-shift) # time resolution is 1hr because of alignment with BARRA
+    )
+
+# Use previous timestep to find the rate of change
+for var in ds.data_vars:
+    ds[f'delta_{var}'] = ds[var] - ds[var].shift(time=1)
+
+####################################################################
+# SAVE DATA
+####################################################################
+
+# convert to dataframe again to prepare to save in parquet tabular format
+df = ds.to_dataframe()
+# Remove rows with missing data, can't be used by xgboost
+df = df.dropna()
+
+date_str = f"{start_date}"[0:10]
+
+df.to_parquet(f'/scratch/er8/cd3022/xgb_datasets/all_training_{date_str}.parquet')
 print("DONE!")

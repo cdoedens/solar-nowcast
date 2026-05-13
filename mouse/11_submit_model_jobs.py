@@ -3,21 +3,29 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import sys
 
+'''
+This script writes and submits qsub jobs.
+The argument passed into this script is the name of the script to submit jobs for.
+One job will be submitted for each model configuration listed in the configs list below.
+'''
+script_to_run = sys.argv[1]
+name = script_to_run.split('_')[1]
 
 configs = [
-    # list config yaml files for models to be trained
+    # list config yaml files for models to run jobs for
     # 'original',
     # 'vanilla',
-    'b-rad',
-    'b-mod',
-    # 'del_van'
+    # 'b-rad',
+    # 'b-mod',
+    # 'del_van',
+    'base',
 ]
 
 for conf in configs:
     
     # Generate a unique file name based on iteration
-    joboutdir = '/home/548/cd3022/repos/solar-nowcast/jobs/xgboost/'
-    job_script_filename = joboutdir + f'xgb___{conf}.qsub'
+    joboutdir = f'/home/548/cd3022/repos/solar-nowcast/jobs/{name}/'
+    job_script_filename = joboutdir + f'{name}___{conf}.qsub'
     
     # Open the file for writing
     with open(job_script_filename, "w") as f3:
@@ -30,11 +38,11 @@ for conf in configs:
         f3.write('#PBS -l other=hyperthread \n')
         f3.write('#PBS -q normal \n')
         f3.write('#PBS -P er8 \n')
-        f3.write(f'#PBS -o /home/548/cd3022/repos/solar-nowcast/logs/xgboost/xgb___{conf}.oe \n')
+        f3.write(f'#PBS -o /home/548/cd3022/repos/solar-nowcast/logs/{name}/{name}___{conf}.oe \n')
         f3.write('#PBS -j oe \n')
         f3.write('cd /home/548/cd3022/repos/solar-nowcast \n') 
         f3.write('source env.sh \n')
-        f3.write(f'python3 mouse/02_xgboost.py {conf}\n')
+        f3.write(f'python3 mouse/{script_to_run}.py {conf}\n')
 
 
     # Submit the generated script to the job scheduler (PBS) using qsub
