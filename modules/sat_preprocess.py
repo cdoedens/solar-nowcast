@@ -2,6 +2,7 @@ import xarray as xr
 from pathlib import Path
 import re
 from datetime import datetime, timedelta
+import pandas as pd
 
 
 def get_ancil(file_path):
@@ -85,7 +86,7 @@ def get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max, coords=False):
         drop=True
     )
 
-    ds_reg = ds.sel(y=reg.y.values, x=reg.x.values)
+    ds_reg = ds.sel(y=reg.y.values, x=reg.x.values, method='nearest')
 
     if not coords:
         return ds_reg
@@ -130,7 +131,33 @@ def read_himawari_channel(channel, start, end, lat_min, lat_max, lon_min, lon_ma
 
 
 
+def read_satproduct(files, lat_min, lat_max, lon_min, lon_max, coords=False):
 
+    ancil_file = Path(f'/g/data/ra22/satellite-products/arc/obs/himawari-ahi/fldk/latest/ancillary/00000000000000-P1S-ABOM_GEOM_SENSOR-PRJ_GEOS141_2000-HIMAWARI8-AHI.nc')
+    ancil = xr.open_dataset(ancil_file).isel(time=0)
+
+    def preprocess(ds):
+        # add missing time dimension using time stored as attr
+        ds = ds.expand_dims(
+            time=[pd.Timestamp(ds.attrs['nominal_product_time'])]
+        )
+
+        # rename dim for consistency with earlier functions
+        ds = ds.rename({
+            'ny':'y',
+            'nx':'x'
+        })
+        return get_sat_reg(ds, ancil, lat_min, lat_max, lon_min, lon_max, coords)
+
+    return xr.open_mfdataset(
+        files,
+        preprocess=preprocess,
+        concat_dim='time',
+        combine='nested',
+        data_vars='minimal',
+        coords='minimal',
+        compat='override'
+    )
 
 
 
