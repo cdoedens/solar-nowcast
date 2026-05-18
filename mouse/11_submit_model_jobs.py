@@ -13,12 +13,12 @@ name = script_to_run.split('_')[1]
 
 configs = [
     # list config yaml files for models to run jobs for
-    # 'original',
+    'original',
     # 'vanilla',
-    # 'b-rad',
+    'b-rad',
     # 'b-mod',
-    # 'del_van',
-    'base',
+    'del_van',
+    # 'base',
 ]
 
 for conf in configs:
