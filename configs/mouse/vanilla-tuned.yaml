@@ -1,0 +1,46 @@
+model:
+    name: vanilla
+    forecast_lead: 3
+    parameters:
+        random_state: 42
+        n_estimators: 2000
+        early_stopping_rounds: 50
+        learning_rate: 0.035
+        eval_metric: rmse
+        max_depth: 4
+        min_child_weight: 3
+        subsample: 0.774
+        'colsample_bytree': 0.714620690738731
+        gamma: 0.00888
+        reg_alpha: 0.03242
+        reg_lambda: 0.376
+data:
+    predictors:
+        - channel_0013_brightness_temperature
+        - channel_0003_scaled_radiance
+        - channel_0015_brightness_temperature
+        - hus500
+        - ta500
+        - channel_0013_0015_difference
+        - channel_0011_0013_difference
+        - channel_0007_0013_difference
+        - KI
+        - RH24mean
+        - TCD
+        - delta_channel_0013_brightness_temperature
+        - delta_channel_0003_scaled_radiance
+        - delta_channel_0015_brightness_temperature
+        - delta_hus850
+        - delta_hus500
+        - delta_ta850
+        - delta_hus700
+        - delta_ta700
+        - delta_ta500
+        - delta_channel_0013_0015_difference
+        - delta_channel_0011_0013_difference
+        - delta_channel_0007_0013_difference
+        - delta_KI
+        - delta_RH24mean
+        - delta_TCD
+        - delta_csi
+    target: csi
