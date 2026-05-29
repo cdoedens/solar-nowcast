@@ -1,11 +1,11 @@
 model:
     name: b-rad
-    forecast_lead: 2
+    forecast_lead: 3
     parameters:
         random_state: 42
         n_estimators: 2000
         early_stopping_rounds: 50
-        learning_rate: 0.03
+        learning_rate: 0.01
         eval_metric: rmse
 data:
     predictors:
@@ -13,10 +13,13 @@ data:
         - channel_0015_brightness_temperature
         - channel_0007_0013_difference
         - channel_0011_0013_difference
-        - csi
+        - channel_0013_0015_difference
+        - cloud_optical_depth
         - delta_channel_0003_scaled_radiance
         - delta_channel_0015_brightness_temperature
         - delta_channel_0007_0013_difference
         - delta_channel_0011_0013_difference
+        - delta_channel_0013_0015_difference
         - delta_csi
+        - delta_cloud_optical_depth
     target: csi

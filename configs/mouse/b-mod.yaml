@@ -1,27 +1,21 @@
 model:
     name: b-mod
-    forecast_lead: 2
+    forecast_lead: 3
     parameters:
         random_state: 42
         n_estimators: 2000
         early_stopping_rounds: 50
-        learning_rate: 0.03
+        learning_rate: 0.01
         eval_metric: rmse
 data:
     predictors:
-        - huss
-        - hus850
-        - hus700
         - hus500
-        - tas
-        - ta850
-        - ta700
         - ta500
         - KI
         - RH24mean
         - TCD
+        - ATP
         - psl
-        - csi
         - delta_huss
         - delta_hus850
         - delta_hus700
