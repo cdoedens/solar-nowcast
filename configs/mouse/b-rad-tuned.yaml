@@ -1,5 +1,5 @@
 model:
-    name: b-rad
+    name: b-rad-tuned
     forecast_lead: 3
     parameters:
         random_state: 42

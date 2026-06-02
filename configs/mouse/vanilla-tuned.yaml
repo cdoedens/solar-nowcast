@@ -1,5 +1,5 @@
 model:
-    name: vanilla
+    name: vanilla-tuned
     forecast_lead: 3
     parameters:
         random_state: 42
@@ -10,7 +10,7 @@ model:
         max_depth: 4
         min_child_weight: 3
         subsample: 0.774
-        'colsample_bytree': 0.714620690738731
+        colsample_bytree: 0.714620690738731
         gamma: 0.00888
         reg_alpha: 0.03242
         reg_lambda: 0.376

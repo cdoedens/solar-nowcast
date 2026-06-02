@@ -1,5 +1,5 @@
 model:
-    name: base
+    name: base-tuned
     forecast_lead: 3
     parameters:
         random_state: 42
