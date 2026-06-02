@@ -35,6 +35,13 @@ if __name__ == '__main__':
     early_stopping_rounds = config["model"]["parameters"]["early_stopping_rounds"]
     learning_rate = config["model"]["parameters"]["learning_rate"]
     eval_metric = config["model"]["parameters"]["eval_metric"]
+    max_depth = config["model"]["parameters"]["max_depth"]
+    min_child_weight = config["model"]["parameters"]["min_child_weight"]
+    subsample = config["model"]["parameters"]["subsample"]
+    colsample_bytree = config["model"]["parameters"]["colsample_bytree"]
+    gamma = config["model"]["parameters"]["gamma"]
+    reg_alpha = config["model"]["parameters"]["reg_alpha"]
+    reg_lambda = config["model"]["parameters"]["reg_lambda"]
     
     # Data
     X_vars = config["data"]["predictors"]
@@ -99,6 +106,13 @@ if __name__ == '__main__':
         early_stopping_rounds=early_stopping_rounds,
         eval_metric=eval_metric,
         tree_method="hist",
+        max_depth=max_depth,
+        min_child_weight=min_child_weight,
+        subsample=subsample,
+        colsample_bytree=colsample_bytree,
+        gamma=gamma,
+        reg_alpha=reg_alpha,
+        reg_lambda=reg_lambda,
     )
     
     # TRAIN
