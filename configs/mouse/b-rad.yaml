@@ -1,5 +1,5 @@
 model:
-    name: b-rad-tuned
+    name: b-rad
     forecast_lead: 3
     parameters:
         random_state: 42
@@ -17,12 +17,18 @@ model:
 data:
     predictors:
         - channel_0003_scaled_radiance
+        - channel_0005_scaled_radiance
+        - channel_0007_brightness_temperature
+        - channel_0009_brightness_temperature
         - channel_0015_brightness_temperature
         - channel_0007_0013_difference
         - channel_0011_0013_difference
         - channel_0013_0015_difference
         - cloud_optical_depth
         - delta_channel_0003_scaled_radiance
+        - delta_channel_0005_scaled_radiance
+        - delta_channel_0007_brightness_temperature
+        - delta_channel_0009_brightness_temperature
         - delta_channel_0015_brightness_temperature
         - delta_channel_0007_0013_difference
         - delta_channel_0011_0013_difference

@@ -1,5 +1,5 @@
 model:
-    name: b-mod-tuned
+    name: b-mod
     forecast_lead: 3
     parameters:
         random_state: 42
