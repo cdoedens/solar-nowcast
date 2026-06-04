@@ -12,12 +12,12 @@ import yaml
 if __name__ == '__main__':
     # Start dask client for distributed training
     client = Client(
-        n_workers=8,
-        threads_per_worker=1
+        n_workers= 1, #8,
+        threads_per_worker= 12 #1
     )
 
     # match partitions with workers
-    num_partitions = 64
+    num_partitions = 2 #64
 
     ###############################################################
     # LOAD MODEL CONFIGURATION
@@ -113,6 +113,7 @@ if __name__ == '__main__':
         gamma=gamma,
         reg_alpha=reg_alpha,
         reg_lambda=reg_lambda,
+        device='cuda'
     )
     
     # TRAIN
