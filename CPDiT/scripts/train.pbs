@@ -1,0 +1,27 @@
+#!/bin/bash -l
+#PBS -N cpdft_train
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:gpu_type=V100
+#PBS -l walltime=24:00:00
+#PBS -j oe
+#PBS -o outputs/logs/training.log
+
+# PBS Job Script for training CPDiT on HPC cluster
+
+# Load modules
+module load cuda/11.8
+module load pytorch/2.0.1
+
+# Activate virtual environment
+source /path/to/venv/bin/activate
+
+# Set up directories
+cd /path/to/CPDiT
+
+# Run training
+echo "Starting CPDiT training on GPU..."
+python -m src.training.train \
+    --config configs/train_config.yaml \
+    --device cuda
+
+echo "Training job completed!"

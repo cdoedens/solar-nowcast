@@ -1,0 +1,48 @@
+# Training Configuration for Latent Diffusion Transformer
+
+# Model Architecture
+model:
+  image_channels: 3
+  latent_dim: 256
+  num_transformer_layers: 4
+  num_heads: 8
+  feedforward_dim: 1024
+  num_diffusion_steps: 1000
+  dropout: 0.1
+
+# Training Hyperparameters
+training:
+  batch_size: 32
+  num_epochs: 100
+  learning_rate: 1.0e-4
+  warmup_steps: 1000
+  weight_decay: 1.0e-4
+
+# Data Configuration
+data:
+  context_length: 12  # Number of past frames
+  forecast_length: 6  # Number of future frames to predict
+  train_data_paths:
+    - /path/to/himawari/train/
+  val_data_paths:
+    - /path/to/himawari/val/
+  test_data_paths:
+    - /path/to/himawari/test/
+  num_workers: 4
+
+# Checkpointing
+checkpointing:
+  save_interval: 10
+  checkpoint_dir: outputs/checkpoints
+  log_dir: outputs/logs
+
+# MLflow Configuration
+mlflow:
+  tracking_uri: http://localhost:5000
+  experiment_name: CPDiT
+  run_name: baseline_model
+
+# Hardware Configuration
+hardware:
+  device: cuda
+  mixed_precision: true
