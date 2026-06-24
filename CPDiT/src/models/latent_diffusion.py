@@ -181,6 +181,7 @@ class LatentDiffusionTransformer(nn.Module):
         image_channels:       int   = 3,
         image_size:           int   = 64,
         latent_dim:           int   = 256,
+        hidden_dim:           int   = 256,
         num_transformer_layers: int = 4,
         num_heads:            int   = 8,
         feedforward_dim:      int   = 1024,
@@ -214,6 +215,7 @@ class LatentDiffusionTransformer(nn.Module):
         self.vae = VariationalAutoencoder(
             image_channels=image_channels,
             latent_dim=latent_dim,
+            hidden_dim=hidden_dim,
             image_size=image_size,
         )
 

@@ -40,7 +40,6 @@ mlflow server --backend-store-uri sqlite:///mlflow.db
 ### Supported Datasets
 
 - **HIMAWARI-8/9**: Japanese geostationary satellite imagery
-- **GOES**: NOAA geostationary satellites
 - Custom satellite data (must be in netCDF format)
 
 ### Expected Data Format
