@@ -1,22 +1,24 @@
-#!/bin/bash -l
-#PBS -N cpdft_train
-#PBS -q gpu
-#PBS -l select=1:ngpus=1:gpu_type=V100
-#PBS -l walltime=24:00:00
-#PBS -j oe
-#PBS -o outputs/logs/training.log
+#!/bin/bash 
+#PBS -l walltime=1:00:00 
+#PBS -l mem=96GB 
+#PBS -l ncpus=12
+#PBS -l ngpus=1
+#PBS -l jobfs=10GB 
+#PBS -l storage=gdata/dk92+scratch/er8
+#PBS -l other=hyperthread 
+#PBS -q gpuvolta 
+#PBS -P er8 
+#PBS -o /home/548/cd3022/repos/solar-nowcast/CPDiT/outputs/logs/training.log
+#PBS -j oe 
 
-# PBS Job Script for training CPDiT on HPC cluster
 
-# Load modules
-module load cuda/11.8
-module load pytorch/2.0.1
-
-# Activate virtual environment
-source /path/to/venv/bin/activate
 
 # Set up directories
-cd /path/to/CPDiT
+cd /home/548/cd3022/repos/solar-nowcast/CPDiT
+
+# PBS Job Script for training CPDiT on HPC cluster
+source hpc_setup.sh
+
 
 # Run training
 echo "Starting CPDiT training on GPU..."

@@ -48,7 +48,3 @@ echo ""
 # fi
 
 echo "✓ HPC environment ready!"
-echo ""
-echo "Next steps:"
-echo "  1. Test with: python quickstart.py"
-echo "  2. Run training: python scripts/train.py"

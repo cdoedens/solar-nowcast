@@ -84,9 +84,10 @@ training:
     stage2: 16
 
   # Epochs
+  # REDUCED TO 1 FOR TESTING PURPOSES. CHANGE BACK TO 100/200 FOR FULL TRAINING.
   max_epochs:
-    stage1: 100
-    stage2: 200
+    stage1: 1
+    stage2: 1
 
   early_stopping:
     enabled: true
