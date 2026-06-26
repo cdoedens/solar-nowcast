@@ -178,7 +178,7 @@ class LatentDiffusionTransformer(nn.Module):
 
     def __init__(
         self,
-        image_channels:       int   = 3,
+        image_channels:       int   = 5,
         image_size:           int   = 64,
         latent_dim:           int   = 256,
         hidden_dim:           int   = 256,

@@ -13,7 +13,7 @@ class TrainingConfig:
     """Training configuration compatible with the staged YAML schema."""
 
     # Model
-    image_channels: int = 3
+    image_channels: int = 5
     image_size: int = 64
     latent_dim: int = 256
     hidden_dim: int = 256
@@ -121,7 +121,7 @@ class TrainingConfig:
 
         return cls(
             # model
-            image_channels      = int(model_cfg.get("image_channels", 3)),
+            image_channels      = int(model_cfg.get("image_channels", 5)),
             image_size          = int(model_cfg.get("image_size", 64)),
             latent_dim          = int(model_cfg.get("latent_dim", 256)),
             hidden_dim          = int(model_cfg.get("hidden_dim", 256)),

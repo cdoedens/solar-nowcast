@@ -14,6 +14,7 @@ class CPDiTSmokeTests(unittest.TestCase):
         self.assertEqual(cfg.forecast_length, 6)
         self.assertEqual(cfg.stage, 2)
         self.assertEqual(cfg.freeze_vae, True)
+        self.assertEqual(cfg.image_channels, 5)
 
     def test_transformer_forward_shape(self):
         model = TransformerBackbone(latent_dim=16, num_layers=2, num_heads=4, feedforward_dim=32, max_seq_len=32)

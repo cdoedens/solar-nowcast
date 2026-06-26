@@ -1,6 +1,6 @@
 
 model:
-  image_channels: 3
+  image_channels: 5
   image_size: 256                # Spatial size of input patches (H = W)
   latent_dim: 256                # VAE latent vector dimension
   hidden_dim: 256                # VAE conv base channel width (D → 2D → 4D)

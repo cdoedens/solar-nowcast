@@ -9,6 +9,8 @@ DEVICE=${2:-cuda}
 echo "Starting training with config: $CONFIG_PATH"
 echo "Device: $DEVICE"
 
+source hpc_setup.sh
+
 # Run training
 python -m src.training.train \
     --config "$CONFIG_PATH" \
